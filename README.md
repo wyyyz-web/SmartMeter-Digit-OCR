@@ -47,7 +47,7 @@ SmartMeter-Digit-OCR/
 │   ├── recognizer.py         # PaddleOCR 识别引擎配置
 │   ├── pipeline.py           # 串联检测与识别的端到端主程序
 │   └── utils.py              # 图像预处理、NMS 及可视化工具
-├── inference_model/          # ⚠️ 预训练模型权重 (需手动解压放置)
+├── inference_model/          # 预训练模型权重 (需手动解压放置)
 │   ├── det_model/            # 目标检测权重文件
 │   └── rec_model/            # 序列识别权重文件
 ├── requirements.txt          # 运行环境依赖清单
