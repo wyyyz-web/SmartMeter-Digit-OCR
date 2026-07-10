@@ -97,22 +97,10 @@ python src/pipeline.py \
 ---
 ---
 
+---
 ## 7. 工业级模型部署 (Industrial Deployment)
 
-为了适应资源受限的边缘设备（如巡检机器人、手持终端），本项目的识别模块已剥离庞大的训练框架，提供标准的 ONNX 格式交付物。
-
-### 核心指标
-- **测试集规模**：5,000 张真实复杂场景裁剪图像。
-- **实测准确率**：99.64%。
-- **输入规范**：高度固定为 48 像素，宽度动态自适应 (Dynamic Shape)。
-
-### 接入方式
-无需安装 PaddlePaddle 或 PyTorch，目标系统仅需集成轻量级 `onnxruntime` 即可完成毫秒级推理。进入 `onnx_deployment/` 目录执行演示脚本：
-
-```bash
-cd onnx_deployment
-python demo_infer.py
-
-**Focus Areas:** Artificial Intelligence, Computer Vision, Graph Deep Learning (GDL), and MLOps Data Pipelines.
-
-对于模型架构细节、二次开发建议或业务落地部署问题，欢迎通过提交 Issue 进行探讨。
+为了适应边缘终端，本项目的识别模块已实现独立轻量化部署。
+- **动态张量支持**：模型脱离原生框架，导出为 ONNX 静态图，支持动态宽度自适应 (`[-1, 3, 48, -1]`)。
+- **性能指标**：在 5,000 张真实复杂场景盲测集中，实现 99.64% 的识别准确率。
+- **一键接入**：进入 `onnx_deployment/` 目录运行 `demo_infer.py`，仅需底层依赖 `onnxruntime` 即可完成毫秒级推理，无缝衔接 C++ 生产环境。
