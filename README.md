@@ -1,76 +1,228 @@
-#  SmartMeter-Digit-OCR: Robust End-to-End Meter Reading System
+# SmartMeter-Digit-OCR: Robust End-to-End Meter Reading System
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)
 ![PyTorch](https://img.shields.io/badge/PyTorch-1.12%2B-orange.svg)
 ![PaddlePaddle](https://img.shields.io/badge/PaddlePaddle-2.4%2B-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-> **"From Pixels to Digits: Bridging the gap between complex industrial environments and reliable data governance."**
+> **"From Pixels to Digits: Bridging the Gap Between Complex Industrial Environments and Reliable Data Governance."**
 
 ---
 
-##  1. 项目简介 (Introduction)
+# 1. Introduction
 
-本项目旨在解决复杂工业与自然场景下，智能电表读数的自动化、高精度提取问题。传统的仪表识别方法极易受到光照突变、拍摄视角倾斜、表盘反光及环境噪声的干扰。
+SmartMeter-Digit-OCR is an end-to-end intelligent meter reading system designed to address the challenge of **high-precision automatic digit extraction from smart meters under complex industrial and natural environments**.
 
-为此，本项目设计并实现了一个 **级联双阶视觉架构 (Cascaded Dual-Stage Visual Architecture)**，实现了从原始图像输入到结构化数字输出的端到端 (End-to-End) 推理流水线。本项目不仅聚焦于理论模型的构建，更注重 **MLOps** 视角的工程化部署与数据流转，确保模型在实际场景中的鲁棒性。
+Conventional meter recognition approaches often suffer from performance degradation caused by illumination variations, perspective distortions, reflective surfaces, background interference, and image noise. These challenges significantly limit the reliability of automated meter reading systems in real-world deployment scenarios.
 
----
+To overcome these limitations, this project proposes and implements a **Cascaded Dual-Stage Visual Architecture**, establishing a complete end-to-end inference pipeline from raw image acquisition to structured numerical output.
 
-##  2. 核心特性 (Key Features)
-
-- **Coarse-to-fine 级联检测**：引入基于 YOLO 架构的前置目标检测器，在复杂背景中实现电表 ROI (Region of Interest) 的高精度裁剪与对齐。
-- **序列特征解码**：结合 PaddleOCR 的 CRNN-based 网络，利用频率-空间融合策略，对非规则表盘数字序列进行精准解码。
-- **工程化极简部署**：彻底分离代码逻辑与大体积权重文件，提供标准化 `requirements.txt` 与一键运行脚本，极大降低二次开发与复现门槛。
-- **工业级轻量化部署 (Industrial ONNX Deployment)**：识别模块已成功导出为独立于深度学习框架的 ONNX 静态图，支持动态 Tensor 宽度自适应 (`[-1, 3, 48, -1]`)。在 5,000 张实网盲测数据集上实现了 99.64% 的纯净准确率，具备直接无缝集成至 C++ 边缘计算网关的能力。
----
-
-##  3. 系统架构 (System Architecture)
-
-系统的核心推理数据流如下：
-
-1. **Input Stage**：接收非标准化尺寸的原始图像。
-2. **Detector (YOLO)**：预测电表表盘的 Bounding Box，完成目标区域的自适应裁剪。
-3. **Alignment**：对倾斜的表盘区域进行仿射变换与透视校正（可选模块）。
-4. **Recognizer (PaddleOCR)**：对对齐后的文本行进行特征提取与 CTC 解码。
-5. **Output Stage**：输出结构化字符串序列及置信度评分。
+Beyond model development, this project emphasizes **engineering-oriented deployment and MLOps principles**, including modular architecture design, lightweight inference, model decoupling, and industrial edge deployment, enabling reliable integration into practical data acquisition and governance workflows.
 
 ---
 
-##  4. 目录结构 (Directory Structure)
+# 2. Key Features
+
+## 🔹 Coarse-to-Fine Cascaded Detection Framework
+
+A YOLO-based object detection module is introduced as the first-stage perception component to accurately locate and crop meter regions of interest (ROI) from complex backgrounds.
+
+This coarse-to-fine strategy significantly improves downstream recognition robustness by reducing background interference and enhancing digit-level feature extraction.
+
+---
+
+## 🔹 Sequence-Based Feature Decoding
+
+The system integrates a CRNN-based PaddleOCR recognition architecture with spatial-frequency feature modeling.
+
+By leveraging sequential visual representation learning and CTC-based decoding, the model achieves accurate recognition of irregular meter digit sequences under challenging imaging conditions.
+
+---
+
+## 🔹 Engineering-Oriented Lightweight Deployment
+
+Following modern MLOps principles, this project separates source code from large-scale model weights.
+
+The repository provides:
+
+- Standardized dependency management through `requirements.txt`
+- Modular inference pipeline design
+- Reproducible deployment scripts
+- Lightweight model loading mechanism
+
+This design substantially reduces deployment complexity and improves reproducibility for industrial applications.
+
+---
+
+## 🔹 Industrial-Grade ONNX Deployment
+
+The recognition module has been successfully exported into a framework-independent ONNX static graph.
+
+The deployment version supports dynamic tensor width adaptation:
 
 ```text
-SmartMeter-Digit-OCR/
-├── datasets/                 # 测试样例与本地验证集
-├── src/                      # 核心源代码目录
-├── inference_model/          # 预训练模型权重 (需手动解压放置)
-├── onnx_deployment/          # 工业级静态图部署模块 (独立运行)
-│   ├── meter_rec.onnx        # 支持动态宽度的识别推理模型
-│   ├── ppocr_keys_v1.txt     # 字符解码字典
-│   └── demo_infer.py         # ONNX Runtime 极简接入示例
-├── requirements.txt          # 运行环境依赖清单
-└── README.md                 # 项目说明文档
+[-1, 3, 48, -1]
+```
+
+On a real-world blind evaluation dataset containing **5,000 complex industrial images**, the deployed model achieves:
+
+```text
+Recognition Accuracy: 99.64%
+```
+
+demonstrating strong robustness and practical deployment capability for edge AI systems.
+
+---
+
+# 3. System Architecture
+
+The complete inference pipeline follows a cascaded perception-to-recognition workflow:
+
+```
+                 Input Image
+                      |
+                      v
+              YOLO Detector
+                      |
+                      v
+            Meter ROI Extraction
+                      |
+                      v
+       Perspective / Affine Alignment
+                      |
+                      v
+          PaddleOCR Recognition
+                      |
+                      v
+           CTC Sequence Decoding
+                      |
+                      v
+     Structured Digit Output + Confidence
 ```
 
 ---
 
-##  5. 模型权重准备 (Model Weights)
+## Pipeline Description
 
-为了保持开源代码库的轻量化并遵循最佳工程实践，预训练模型权重已与代码分离打包。
+### 1. Input Stage
 
-获取与配置方式：
-
-1. 请下载本仓库根目录下的 `inference_model_safebox.zip` 文件。
-2. 将该压缩包解压，并确保解压后的文件夹命名为 `inference_model`。
-3. 将该文件夹放置于项目根目录下，使其与 `src` 文件夹同级（如上文树状图所示）。
+Receives raw meter images with arbitrary resolutions and non-standard imaging conditions.
 
 ---
 
-##  6. 快速启动 (Quick Start)
+### 2. Detector Stage
 
-### 步骤 1：环境配置
+The YOLO-based detector predicts meter bounding boxes and performs adaptive region extraction.
 
-推荐使用 Conda 构建纯净的虚拟环境，以避免底层依赖冲突：
+This stage enables accurate localization of meter regions in complex backgrounds.
+
+---
+
+### 3. Alignment Stage
+
+Optional geometric correction modules perform:
+
+- Perspective transformation
+- Affine transformation
+- Image rectification
+
+to reduce distortion caused by camera viewpoints.
+
+---
+
+### 4. Recognition Stage
+
+The PaddleOCR-based recognition network extracts sequential visual features and performs digit decoding through CTC-based sequence prediction.
+
+---
+
+### 5. Output Stage
+
+The system outputs:
+
+- Recognized digit sequence
+- Confidence score
+- Visualization results
+
+for downstream data processing and intelligent monitoring systems.
+
+---
+
+# 4. Directory Structure
+
+```
+SmartMeter-Digit-OCR/
+│
+├── datasets/                 
+│   └── Test samples and local validation datasets
+│
+├── src/                      
+│   └── Core source code implementation
+│
+├── inference_model/          
+│   └── Pre-trained model weights
+│
+├── onnx_deployment/          
+│   ├── meter_rec.onnx        
+│   ├── ppocr_keys_v1.txt     
+│   └── demo_infer.py         
+│
+├── requirements.txt          
+│
+└── README.md                 
+```
+
+---
+
+# 5. Model Weight Preparation
+
+To maintain a lightweight repository and follow modern open-source engineering practices, large-scale pre-trained weights are separated from the source code.
+
+## Download and Configuration
+
+### Step 1
+
+Download:
+
+```
+inference_model_safebox.zip
+```
+
+from the repository root directory.
+
+---
+
+### Step 2
+
+Extract the archive and rename the extracted folder:
+
+```
+inference_model
+```
+
+---
+
+### Step 3
+
+Place the folder under the project root directory:
+
+```
+SmartMeter-Digit-OCR/
+│
+├── src/
+├── inference_model/
+├── datasets/
+├── onnx_deployment/
+└── README.md
+```
+
+---
+
+# 6. Quick Start
+
+## Step 1: Environment Setup
+
+A clean Python environment is recommended to avoid dependency conflicts.
 
 ```bash
 git clone https://github.com/wyyyz-web/SmartMeter-Digit-OCR.git
@@ -80,9 +232,11 @@ cd SmartMeter-Digit-OCR
 pip install -r requirements.txt
 ```
 
-### 步骤 2：端到端推理验证
+---
 
-系统配置完毕后，通过执行主干流水线脚本，即可对样例图片进行自动化识别：
+## Step 2: End-to-End Inference
+
+After completing environment configuration and model preparation, run:
 
 ```bash
 python src/pipeline.py \
@@ -92,15 +246,124 @@ python src/pipeline.py \
     --vis_output ./output/
 ```
 
-执行完毕后，带有 Bounding Box 标注与识别结果的可视化图像将自动保存在 `./output/` 文件夹中。
-
----
 ---
 
----
-## 7. 工业级模型部署 (Industrial Deployment)
+After execution, visualization results containing:
 
-为了适应边缘终端，本项目的识别模块已实现独立轻量化部署。
-- **动态张量支持**：模型脱离原生框架，导出为 ONNX 静态图，支持动态宽度自适应 (`[-1, 3, 48, -1]`)。
-- **性能指标**：在 5,000 张真实复杂场景盲测集中，实现 99.64% 的识别准确率。
-- **一键接入**：进入 `onnx_deployment/` 目录运行 `demo_infer.py`，仅需底层依赖 `onnxruntime` 即可完成毫秒级推理，无缝衔接 C++ 生产环境。
+- Meter bounding boxes
+- Recognized digit sequences
+- Confidence scores
+
+will automatically be saved into:
+
+```
+./output/
+```
+
+---
+
+# 7. Industrial-Grade Model Deployment
+
+To support practical edge computing scenarios, the recognition module has been independently optimized for lightweight industrial deployment.
+
+---
+
+## Dynamic Tensor Adaptation
+
+The recognition model has been converted from the original deep learning framework into an ONNX static graph.
+
+Supported dynamic input shape:
+
+```text
+[-1, 3, 48, -1]
+```
+
+This enables flexible inference for meter images with different widths and digit layouts.
+
+---
+
+## High Reliability Performance
+
+The deployed ONNX recognition model achieves:
+
+```text
+Recognition Accuracy: 99.64%
+
+Evaluation Dataset:
+5,000 Real-World Blind Test Images
+```
+
+under complex industrial imaging conditions.
+
+The results demonstrate strong robustness and practical usability in real deployment scenarios.
+
+---
+
+## Framework-Independent Deployment
+
+The ONNX version removes dependency on the original training framework.
+
+Enter:
+
+```bash
+cd onnx_deployment/
+```
+
+and run:
+
+```bash
+python demo_infer.py
+```
+
+Only the lightweight runtime dependency is required:
+
+```text
+onnxruntime
+```
+
+The deployment architecture enables seamless integration with:
+
+- C++ industrial gateways
+- Edge AI devices
+- Automated inspection systems
+- Smart infrastructure platforms
+
+---
+
+# 8. Project Highlights
+
+SmartMeter-Digit-OCR demonstrates a complete industrial AI workflow:
+
+```
+Raw Image Acquisition
+          |
+          v
+Visual Perception
+          |
+          v
+Meter Localization
+          |
+          v
+Digit Sequence Recognition
+          |
+          v
+Structured Data Generation
+          |
+          v
+Industrial Edge Deployment
+```
+
+This project bridges the gap between **deep learning research prototypes and real-world intelligent infrastructure applications**.
+
+By combining robust visual perception, sequence recognition, and deployment-oriented optimization, SmartMeter-Digit-OCR provides a scalable solution for:
+
+- Automated meter reading
+- Industrial inspection
+- Intelligent data acquisition
+- Digital infrastructure monitoring
+
+---
+
+# License
+
+This project is released under the MIT License.
